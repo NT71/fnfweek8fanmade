@@ -915,7 +915,7 @@ class PlayState extends MusicBeatState
 		scoreTxt.visible = !ClientPrefs.hideHud;
 		add(scoreTxt);
 
-		botplayTxt = new FlxText(400, timeBarBG.y + 55, FlxG.width - 800, "PORTED BY NT846", 32);
+		botplayTxt = new FlxText(400, timeBarBG.y + 55, FlxG.width - 800, "BOTPLAY", 32);
 		botplayTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		botplayTxt.scrollFactor.set();
 		botplayTxt.borderSize = 1.25;
@@ -1127,30 +1127,36 @@ class PlayState extends MusicBeatState
 
 	public function startVideo(name:String):Void {
 		var foundFile:Bool = false;
-		var fileName = name;
-		if(OpenFlAssets.exists("assets/videos/" + fileName + ".webm")) 
+		var fileName:String = Paths.video(name);
+
+		if(OpenFlAssets.exists(fileName)) 
 		{
 			foundFile = true;
 		}
 
-		if(foundFile) 
+		if(foundFile) {
+			inCutscene = true;
+			var bg = new FlxSprite(-FlxG.width, -FlxG.height).makeGraphic(FlxG.width * 3, FlxG.height * 3, FlxColor.BLACK);
+			bg.scrollFactor.set();
+			bg.cameras = [camHUD];
+			add(bg);
+
+			(new FlxVideo(fileName)).finishCallback = function() {
+				remove(bg);
+                                if(endingSong) 
+			        {
+				        endSong();
+			        } 
+			        else 
+			        {
+				        startCountdown();
+			        }
+			}
+			return;
+		}
+		else
 		{
-            var video = new WebmPlayerS(fileName, true);
-            video.endcallback = () -> {
-                remove(video);
-                if(endingSong) {
-                    endSong();
-                } else {
-                    startCountdown();
-                }
-            }
-            video.setGraphicSize(FlxG.width);
-            video.updateHitbox();
-            add(video);
-            video.play();
-		} 
-		else 
-		{
+			FlxG.log.warn('Couldnt find video file: ' + fileName);
 			if(endingSong) 
 			{
 				endSong();
@@ -1987,7 +1993,7 @@ class PlayState extends MusicBeatState
 		if(ratingString == '?') {
 			scoreTxt.text = 'Score: ' + songScore + ' | OPTIMIZED BY NT846 | Misses: ' + songMisses + ' | Rating: ' + ratingString;
 		} else {
-			scoreTxt.text = 'Score: ' + songScore + ' | OPTIMIZED BY NT846 | Misses: ' + songMisses + ' | Rating: ' + ratingString + ' (' + Math.floor(ratingPercent * 100) + '%)';
+			scoreTxt.text = 'Score: ' + songScore + ' | OPTIMIZED BY NT846 |  Misses: ' + songMisses + ' | Rating: ' + ratingString + ' (' + Math.floor(ratingPercent * 100) + '%)';
 		}
 
 		if(cpuControlled) {
